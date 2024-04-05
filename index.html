@@ -19,70 +19,140 @@
   <style>
     .attribution { font-size: 11px; text-align: center; }
     .attribution a { color: hsl(228, 45%, 44%); }
+
+    @media screen and (max-width: 768px) { 
+    .mobile{
+      background-image: url('https://raw.githubusercontent.com/Siddarth-abcs/Iptracker/main/images/pattern-bg-mobile.png');
+      background-size:  cover;
+      background-position: center;
+    }
+    }
+
+    @media screen and (min-width: 768px) {
+      .mobile{
+      background-image: url('https://raw.githubusercontent.com/Siddarth-abcs/Iptracker/main/images/pattern-bg-desktop.png');
+      background-size:  cover;
+      background-position: center;
+    }
+    }
+    /* Very Dark Gray: hsl(0, 0%, 17%) */
+    /* Dark Gray: hsl(0, 0%, 59%) */
+    :root { --very-dark-gray: hsl(0, 0%, 17%); --dark-gray:hsl(0, 0%, 59%);}
+    .button-arrow{
+      background: var(--very-dark-gray);
+    }
+    .button-arrow:hover{
+      background: var(--dark-gray);
+    }
   </style>
 </head>
 <body>
 
 <main>
   <div class="h-[100vh] w-6/6">
-    <div class="h-[40vh] bg-blue-400 w-[100%] absolute z-10">
+    <div class="h-[40vh] w-[100%] absolute z-10 mobile">
       <div class="w-5/6 m-auto text-center">
-        <h1 class="text-3xl font-bold py-4">IP Address Tracker</h1>
-        <div class="h-16 bg-white my-3 flex">
-          <input type="text" class="h-[100%] w-5/6 ml-4 outline-none text-2xl font-bold" name="" id="">
-          <button class="h-[100%] bg-yellow-400 w-1/6"><img src="/images/icon-arrow.svg" class="m-auto" alt=""></button>
+        <h1 class="text-3xl text-white font-bold py-4 md:py-8">IP Address Tracker</h1>
+        <div class="h-16 bg-white my-3 flex rounded-xl">
+          <!-- input Box -->
+          <input type="text" class="h-[100%] w-5/6 ml-4 outline-none text-2xl font-bold" name="" id="input">
+          <!-- button -->
+          <button class="h-[100%] button-arrow w-1/6 rounded-r-xl" onclick="ipaddress()" ><img src="/images/icon-arrow.svg" class="m-auto" alt=""></button>
         </div>
-        <!-- box -->
-        <div class="h-80 bg-blue-600 mt-8">
+        <!-- box for show result-->
+        <div class="h-80 md:h-32 bg-white mt-8 md:flex justify-around items-center md:text-left md:translate-y-1/4 rounded-xl">
           <div class="py-2">
-            <h2 class="font-bold text-xl">IP ADDRESS</h2>
-            <p class="font-bold text-3xl">128.168.0.1</p>
+            <h2 class="font-bold text-lg">IP ADDRESS</h2>
+            <p class="font-bold text-2xl" id="ipaddress" >128.168.0.1</p>
           </div>
           <div class="py-2">
-            <h2 class="font-bold text-xl">LOCATION</h2>
-            <p class="font-bold text-3xl">Brooklyn, NY 10001</p>
+            <h2 class="font-bold text-lg">LOCATION</h2>
+            <p class="font-bold text-2xl"><span id="city">Brooklyn</span> , <span id="country">NY</span> <span id="zipcode">10001</span></p>
           </div>
           <div class="py-2">
-            <h2 class="font-bold text-xl">TIMEZONE</h2>
-            <p class="font-bold text-3xl">UTC -05:00</p>
+            <h2 class="font-bold text-lg">TIMEZONE</h2>
+            <p class="font-bold text-2xl" id="timezone" >UTC -05:00</p>
           </div>
           <div class="py-1">
-            <h2 class="font-bold text-xl">ISP</h2>
-            <p class="font-bold text-3xl">SpaceX Starlink</p>
+            <h2 class="font-bold text-lg">ISP</h2>
+            <p class="font-bold text-2xl" id="isp" >SpaceX Starlink</p>
           </div>
         </div>
       </div>
     </div>
-    <div id="map" class="h-[100%] bg-yellow-400 z-0"></div>
+    <div id="map" class="h-[100%] z-0"></div>
   </div>
 </main>
 
 <script>
-var greenIcon = new L.Icon({
-  iconUrl: 'http://leafletjs.com/examples/custom-icons/leaf-green.png',
-  iconSize: [38, 95], // Size of the icon image (width, height)
-  shadowSize: [50, 64], // Size of the shadow image (optional)
-  iconAnchor: [22, 94], // Point of the icon that corresponds to the marker position
-  shadowAnchor: [4, 62], // Point of the shadow that aligns with the icon anchor (optional)
-  popupAnchor: [-3, -76] // Offset of a popup that appears with the marker (optional)
-});
+let ipAddressData;
 
-  var map = L.map('map').setView([28.704060, 77.102493],13);
+// Api Data Fetch
+function ipaddress() {
+    const input = document.getElementById('input').value;
+    const requestOptions = {
+        method: "GET",
+        redirect: "follow"
+    };
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 50,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+    fetch(`https://geo.ipify.org/api/v2/country,city?apiKey=at_MddSY3rcjvYvllJThRz6dPCtNXh9f&ipAddress=${input}`, requestOptions)
+        .then((response) => response.json())
+        .then(data => {
+            ipAddressData = data; // Store IP address data in the variable
+            document.getElementById('ipaddress').innerHTML = data.ip;
+            document.getElementById('city').innerHTML = data.location.city;
+            document.getElementById('country').innerHTML = data.location.country;
+            document.getElementById('zipcode').innerHTML = data.location.postalCode;
+            document.getElementById('timezone').innerHTML = data.location.timezone;
+            document.getElementById('isp').innerHTML = data.isp;
+            // Leaflet
+            lat = ipAddressData.location.lat;
+            lng = ipAddressData.location.lng;
+            if(ipAddressData.location.lng == " "){
+              leaflet(28,78);
+            }else{
+              leaflet(lat,lng);
+            }
 
-var marker = L.marker([28.704060, 77.102493], {icon: greenIcon}).addTo(map);
+        })
+        .catch((error) => console.error(error));
+
+}
+
+// Leaflet Map
+var map;
+
+function leaflet(lat, lng) {
+    if (!map) { // Check if map is not already initialized
+        map = L.map('map').setView([lat, lng], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 50,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+    } else {
+        map.setView([lat, lng], 13); // Set new view if map is already initialized
+    }
+
+// image location icon
+    var greenIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/Siddarth-abcs/Iptracker/69d3f462a7de0f8e668fd02708ca2bb8bd297ea4/images/icon-location.svg',
+    });
+    var marker = L.marker([lat, lng],{icon: greenIcon}).addTo(map);
+
+
+  }
+
+
+
+ipaddress();
 
 </script>
 
 
 
-  <!-- <div class="attribution"> -->
-    <!-- Challenge by <a href="https://www.frontendmentor.io?ref=challenge" target="_blank">Frontend Mentor</a>.  -->
-    <!-- Coded by <a href="#">Your Name Here</a>. -->
-  <!-- </div> -->
+  <div class="attribution absolute top-[90%] left-[40%]">
+    Challenge by <a href="https://www.frontendmentor.io?ref=challenge" target="_blank">Frontend Mentor</a>.  -->
+    Coded by <a href="https://www.instagram.com/developer_siddarth/" target="_blank">developer_siddarth</a>
+  </div>
 </body>
 </html>
